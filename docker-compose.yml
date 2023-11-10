@@ -1,0 +1,37 @@
+# to spin up app and redis containers simultaneously
+version: '3'
+services:
+  webapp-service:
+    build: ./app
+    volumes:
+      - ./app:/usr/src/app/
+    ports:
+      - 5000:5000
+    depends_on: # doesn't start until the redis instance starts
+      - redis-service
+
+  redis-service:
+    image: redis:latest # using already defined redis image on docker hub
+    restart: always
+    volumes:
+      - ./redis_instance:/usr/src/redis_instance/
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_PASSWORD=password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=1
+      - ALLOW_EMPTY_PASSWORD=yes
+    command:
+      - /bin/sh
+      - -c
+      - |
+          nohup redis-server &
+          sleep 5
+          echo "adding some default key value"
+          redis-cli SET docker awesomes
+          echo "Get docker key value"
+          redis-cli GET docker
+          # this will keep container running
+          tail -f /dev/null
+

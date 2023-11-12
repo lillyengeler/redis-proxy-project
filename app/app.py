@@ -1,86 +1,97 @@
-# application entrypoint
 
-# configure the redis cache 
-# cache = Cache(app, config={
-#     'CACHE_TYPE': 'redis',
-#     'CACHE_KEY_PREFIX': 'server1',
-#     'CACHE_REDIS_HOST': 'localhost',
-#     'CACHE_REDIS_PORT': '6379',
-#     'CACHE_REDIS_URL': 'redis://localhost:6379'
-# })
-
-# route == path (maps what user types in url to a python function)
-
-# @app.route('/set')
-# def set():
-#     key = request.args.get('key')
-#     value = request.args.get('value')
-#     cache.set(key,value)
-#     return "Cache has been set"
-
-# @app.route('/get')
-# def get():
-#     key = request.args.get('key')
-
-# web service using Flask (micro web framework)
+# web service using Flask 
 from flask import Flask
 import redis
-# from flask import Flask, request, render_template
-# from flask_caching import Cache
-
+import time
+from localCache import * 
 
 app = Flask(__name__)
 redisClient = redis.Redis(host='redis-service', port=6379, db=0) # redis connected through docker-compose
 
 redisClient.set('name','lillian')
 redisClient.set('you','rock')
+redisClient.set('color', 'pink')
 
-localCache = {} # initialize empty dictionary
+# set capacity -> CHANGE LATER
+capacity = 3
+
+# set TTL (in seconds) -> CHANGE LATER 
+maxTimeAllowed = 60
+
+cache = localCache(capacity,maxTimeAllowed) # initialize empty dictionary and doubly linked list object
+
 
 @app.route('/')
 def home():
     # return "at home page"  
     return "home page"
 
+
 @app.route('/printCache')
 def printCache():
     # return "at home page"  
     print("PRINTING CACHE: ", flush=True)
-    for key in localCache:
-        print(key, ": ", str(localCache[key]), flush=True)
+    cache.printCache()
     return "printing local cache to console"
 
 
-@app.route("/<key>") 
+@app.route("/key=<key>") 
 def search_key(key):
-    # (1.) check local cache to see if it has the key
-    if localCache.get(key) != None:
-        print("found the key in the local cache", flush=True)
-        return localCache[key]
-    # (2.) local cache doesn't have the key: see if it's in redis db
+    # check local cache for key:
+    inCache = cache.searchCache(key)
+    # -> if in cache: 
+    if inCache:
+        # check if key has expired
+        currNode = cache.listMap[key]
+        currTime = time.time()
+        print("curr key's time in cache: ", flush=True)
+        print((currTime - currNode.timeCreated), flush=True)
+        print("currTime: ", currTime, flush=True)
+        # delete key from local cache if expired
+        if (currTime - currNode.timeCreated) >= cache.timeLimit:
+            print("key has expired", flush=True)
+            print("currTime: ", currTime, flush=True)
+            print("time node was created: ", currNode.timeCreated, flush=True)
+            print("currTime - timeCreated = ", (currTime - currNode.timeCreated), flush=True)
+
+            cache.delExpiredNode(key)
+            # check Redis for key. Return None if not found
+            keyValue = (redisClient.get(key))
+            if keyValue == None:
+                print("key not found in local cache or redis", flush=True)
+                return "no key found"
+            # add back to head of cache and return
+            else:
+                print("key found in redis, adding to cache", flush=True)
+                # check cache size: delete LRU if full
+                if len(cache.listMap) >= cache.capacity:
+                    # delete LRU from TAIL of cache AND the listMap
+                    cache.deleteLRU()
+                cache.addNewToHead(key, keyValue)
+                return keyValue
+
+        # move key to head of list and return value
+        return cache.updateNode(key)
+
+    # -> not in cache: 
     else:
-        print("key NOT in local cache: searching redis", flush=True)
+        # check Redis for key. Return None if not found
         keyValue = (redisClient.get(key))
-        # if the key isn't in the redis db just return no key found
         if keyValue == None:
             print("key not found in local cache or redis", flush=True)
             return "no key found"
-        # if the key is in redis, add to local cache and then return value
+        
         else:
             print("key found in redis, adding to cache", flush=True)
-            localCache[key] = keyValue
+            # check cache size: delete LRU if full
+            if len(cache.listMap) >= cache.capacity:
+                # delete LRU from TAIL of cache AND the listMap
+                cache.deleteLRU()
+
+            # now can add the key to the HEAD of the cache
+            cache.addNewToHead(key, keyValue)
+
             return keyValue
-
-
-# @app.route("/<key>") 
-# def search_key(key):
-#     keyValue = (redisClient.get(key))
-
-#     if keyValue == None:
-#         return "no key found"
-#     else:
-#         return keyValue
-
 
 if (__name__ == "__main__"):
     app.run(host='0.0.0.0', port=5000, debug=True)

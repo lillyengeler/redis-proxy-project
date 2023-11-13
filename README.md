@@ -65,6 +65,11 @@ To use the proxy, type in any key in the URL and the proxy will return the value
 "five": "six"
 }
 
+## System Tests
+The system tests run at container startup. They are held in a separate container called "testing". The first test verifies that the Redis instance is valid by setting a value and getting it with the Redis get() and set() methods. The next tests verify that the cache and connection between the Proxy and Redis server are working by populating the Redis db and subsequently searching for keys in the cache. 
+
+Although I wrote several tests, there are many more tests I would have implemented if I had more time such as testing concurrency, a single backing Redis instance, and other small unit tests. 
+
 ## Configuration Values
 
 The following config values are defined in an .env file and in the docker-compose. file:
@@ -81,11 +86,11 @@ Due to time constraints, I was not able to implement the parallel concurrent pro
 ## Time Taken to Complete Project
 
  - building the Flask web service – (0.5 hour)
- - setting up Docker containers and docker-compose – (2 hours)
+ - setting up Docker containers and docker-compose – (2+ hours)
  - creating LRU cache and LRU eviction – (2 hours)
  - implementing global expiry to keys – (0.5 hour)
  - implementing locks for sequential concurrent processing - (0.5 hour)
- - system tests - (2 hours)
- - README documentation - (0.5 hour)
+ - system tests - (2+ hours)
+ - README documentation - (1 hour)
 
-*Notes:* The most time consuming part of this project for me was learning Docker and how the containers interact through docker-compose, since I have not used Docker before. I also wanted to make sure I completely understood every piece of my code and that it was the most optimal solution, so I spent time researching and learning new ways to implement certain concepts such as the LRU Cache and the locks for sequential processing.
+*Notes:* The most time consuming part of this project for me was learning Docker and how the containers interact through docker-compose since I had not used Docker in depth before this. Because of this, I ran into some blocks along the way that slowed my progress particularly when trying to implement a testing container and running the tests inside the container. Although now I know how to do this efficiently, I ran out of time and did not implement as many tests as I would have liked to. I also wanted to make sure I completely understood every piece of my code and that it was the most optimal solution, so I spent time researching and learning new ways to implement certain concepts such as the LRU Cache and the locks for sequential processing.

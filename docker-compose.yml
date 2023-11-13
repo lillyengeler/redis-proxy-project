@@ -30,18 +30,6 @@ services:
       - PROXY_PORT=5000
       - PROXY_ADDRESS=webapp-service
       - ALLOW_EMPTY_PASSWORD=yes
-    command:
-      - /bin/sh
-      - -c
-      - |
-          nohup redis-server &
-          sleep 5
-          echo "adding some default key value"
-          redis-cli SET docker awesomes
-          echo "Get docker key value"
-          redis-cli GET docker
-          # this will keep container running
-          tail -f /dev/null
 
   testing:
     build: ./tests

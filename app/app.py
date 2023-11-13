@@ -24,6 +24,18 @@ lock = threading.Lock() # initialize lock to protect cache during reads/writes
 def home():
     return " To request a value from Redis, type the key in the search bar"
 
+# print MRU from cache for testing purposes
+@app.route('/test/returnHead')
+def returnHead():
+    key = cache.returnHead()
+    return key
+
+# print LRU from cache for testing purposes
+@app.route('/test/returnTail')
+def returnTail():
+    key = cache.returnTail()
+    return key
+
 # print cache as a list for testing purposes
 @app.route('/test/printCache')
 def printCache():
@@ -55,13 +67,13 @@ def search_key(key):
                         # delete LRU from TAIL of cache AND the listMap
                         cache.deleteLRU()
                     cache.addNewToHead(key, keyValue)
-                    return "Value: " + str(keyValue.decode("utf-8"))
+                    return str(keyValue.decode("utf-8"))
 
         # if not expired: move key to head of list and return value
         else:
             with lock:
                 keyValue = cache.updateNode(key)
-                return "Value: " + str(keyValue.decode("utf-8"))
+                return str(keyValue.decode("utf-8"))
 
     # -> not in cache: 
     else:
@@ -80,7 +92,7 @@ def search_key(key):
                 # now can add the key to the HEAD of the cache
                 cache.addNewToHead(key, keyValue)
 
-                return "Value: " + str(keyValue.decode("utf-8"))
+                return str(keyValue.decode("utf-8"))
 
 if (__name__ == "__main__"):
     app.run(host=os.getenv('PROXY_ADDRESS','0.0.0.0'), port=os.getenv('PROXY_PORT',5000), debug=True)

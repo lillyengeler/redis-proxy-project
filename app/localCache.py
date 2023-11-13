@@ -106,7 +106,23 @@ class localCache(object):
     # prints keys and their values in the cache
     def printCache(self):
         temp = self.head
-        while temp != self.tail:
-            print(temp.key, temp.value, flush=True)
+        if temp.next != None:
             temp = temp.next
+            while temp != self.tail:
+                print(temp.key, temp.value, flush=True)
+                temp = temp.next
+
+    # used in tests
+    def returnHead(self):
+        if self.head.next == self.tail or self.head.next == None:
+            return "list is empty"
+        return self.head.next.key
+
+    # used in tests
+    def returnTail(self):
+        if self.tail.prev == self.head or self.tail.prev == None:
+            return "list is empty"
+        return self.tail.prev.key
+
+
 

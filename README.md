@@ -5,11 +5,11 @@
 # High-Level Architecture Overview
 
 ```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+graph LR;
+    A(Client) <--> B[Redis Proxy - LRU Cache - Flask Web Service];
+    B <--> C[(Redis Instance)];
+    D[Testing Container] <-- system tests --> B;
+    D <-- populates Redis with data --> C;
 ```
 
 # Code Explanation

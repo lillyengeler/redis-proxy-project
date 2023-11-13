@@ -5,7 +5,7 @@
 # High-Level Architecture Overview
 
 ```mermaid
-graph LR
+graph LR;
     A(Client) <--> B[Redis Proxy
     - LRU Cache
     - Flask Web Service];

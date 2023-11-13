@@ -6,15 +6,13 @@
 
 ```mermaid
 graph LR
-    A(Client) <--> B["Redis Proxy"
+    A(Client) <--> B[Redis Proxy
     - LRU Cache
-    - Flask Web Service]
-    B <--> C[(Redis Instance)]
-    D[Testing Container] <-- system tests --> B
-    D <-- populates Redis with data --> C
+    - Flask Web Service];
+    B <--> C[(Redis Instance)];
+    D[Testing Container] <-- system tests --> B;
+    D <-- populates Redis with data --> C;
 ```
-
-
 
 # Code Explanation
 On startup, a docker-compose file builds and starts three separate containers: a single Redis instance, the web proxy consisting of the basic web service and the LRU cache, and a container for testing the Proxy.

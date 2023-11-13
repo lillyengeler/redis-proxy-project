@@ -13,7 +13,7 @@ graph LR;
 ```
 
 # Code Explanation
-On startup, a docker-compose file builds and starts three separate containers: a single Redis instance, the web proxy consisting of the basic web service and the LRU cache, and a container for testing the Proxy.
+On startup, a docker-compose file builds and runs three separate containers: a single Redis instance, a web proxy consisting of the basic web service and the LRU cache, and a container for testing the Proxy.
 
 ## Redis Instance
 

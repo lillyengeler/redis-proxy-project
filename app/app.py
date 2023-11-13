@@ -22,7 +22,7 @@ lock = threading.Lock() # initialize lock to protect cache during reads/writes
 # home page
 @app.route('/')
 def home():
-    return " To request a value from Redis, type the key in the search bar"
+    return " To request a value from Redis, type a forward slash followed by the requested key into the search bar"
 
 # print MRU from cache for testing purposes
 @app.route('/test/returnHead')

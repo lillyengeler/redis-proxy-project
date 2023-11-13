@@ -22,16 +22,16 @@ lock = threading.Lock() # initialize lock to protect cache during reads/writes
 # home page
 @app.route('/')
 def home():
-    return " To request a value from Redis, type 'get=' followed by the key"
+    return " To request a value from Redis, type the key in the search bar"
 
 # print cache as a list for testing purposes
-@app.route('/printCache')
+@app.route('/test/printCache')
 def printCache():
     cache.printCache()
     return " ~ Printing local cache to console ~"
 
 # main function - get the requested key/value
-@app.route("/get=<key>") 
+@app.route("/<key>") 
 def search_key(key):   
     with lock:
         # check local cache for key:

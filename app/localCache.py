@@ -1,4 +1,6 @@
-# local cache init: dictionary with doubly linked list
+""" 
+local cache: dictionary with doubly linked list
+"""
 import time
 
 # create a Node class for adding Node objects

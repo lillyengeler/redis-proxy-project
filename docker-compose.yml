@@ -29,7 +29,6 @@ services:
       - REDIS_ADDRESS=redis-service
       - PROXY_PORT=5000
       - PROXY_ADDRESS=webapp-service
-      - REDIS_DATABASES=1
       - ALLOW_EMPTY_PASSWORD=yes
     command:
       - /bin/sh
@@ -43,4 +42,17 @@ services:
           redis-cli GET docker
           # this will keep container running
           tail -f /dev/null
+
+  testing:
+    build: ./tests
+    environment:
+      - PROXY_PORT=5000
+      - PROXY_ADDRESS=webapp-service
+      - REDIS_PORT=6379
+      - REDIS_ADDRESS=redis-service
+      - CACHE_EXPIRY_TIME=60  # in seconds
+      - CACHE_CAPACITY=3 
+    depends_on:
+      - redis-service
+      - webapp-service
 

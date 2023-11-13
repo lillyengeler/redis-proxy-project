@@ -40,23 +40,23 @@ The time complexity of the Cache's operations is as follows:
  1. **Searching for a key: O(1)**
 	To search the cache, the dictionary is searched with the key as the parameter ("if key in  listMap ..."). If the return value is not None, then the key exists in the list and that key's value is returned by simply referencing the value in the dictionary entry that points to that key's node. Since a Python dictionary is able to search for a given key in constant time, and a pointer directly references the key's value, this operation is done in constant time.
 2. **Updating a key's priority to be the Most Recently Used: O(1)**
-	Whenever a key is accessed, it's priority must be updated in the local cache. Since the key/value pair is stored as a node in a doubly linked list, this can be achieved by updating the node's prev and next pointers and using the stored reference of the list's Head to move the node to the front of the list. Since rearranging pointers is a fixed number of operations, this operation is done in constant time. This is the same process and time complexity if a new key is added to the cache.
+	Whenever a key is accessed, its priority must be updated in the local cache. Since the key/value pair is stored as a node in a doubly linked list, this can be achieved by updating the node's prev and next pointers and using the stored reference of the list's Head to move the node to the front of the list. Since rearranging pointers is a fixed number of operations, this operation is done in constant time. This is the same process and time complexity if a new key is added to the cache.
 3. **Deleting the Least Recently Used Node: O(1)**
 	When the cache is at capacity, the LRU node must be deleted from the cache to make room for the new key. As mentioned previously, new nodes/newly accessed nodes are always added to the Head of the list, so the LRU nodes can be found at the end of the list. Since there is a reference to the Tail, the least recently used node can be quickly found and removed by updating its neighbor's prev and next pointers. This requires a fixed number of operations, so it is done in constant time. This is the same process and time complexity if a key that has expired must be deleted from the cache. 
 4. **Checking if a key has expired: O(1)**
-	When a key is added to the local cache, a timestamp is linked to that key which holds the time in seconds when that key was created. Then, a GET request is made for that key, the key's timestamp is checked against the current time (in seconds). If the node has existed longer than the set global expiry time, it is removed from the cache. This process is similar to deleting the least recently used node. Since the timestamp is simply an attribute of each node, accessing and comparing it to the current time takes constant time. 
+	When a key is added to the local cache, a timestamp is linked to that key which holds the time in seconds when that key was created. When a GET request is made for that key, the key's timestamp is checked against the current time (in seconds). If the node has existed longer than the set global expiry time, it is removed from the cache. The removal process is similar to deleting the least recently used node. Since the timestamp is simply an attribute of each node, accessing and comparing it to the current time takes constant time. 
 
 ## Concurrency
 
-While Python automatically includes the Global Interpreter Lock (GIL) that only allows one thread to execute at a time, it is still essential to add locks as the GIL only protects the interpreter internally. To ensure no shared resources are accessed at the same time, locks are added when a user is attempting to read from the cache, move a node in the cache, and delete from the cache. 
+While Python automatically includes the Global Interpreter Lock (GIL) that only allows one thread to execute at a time, it is still essential to add locks as the GIL only protects the interpreter internally. To ensure no shared resources are accessed at the same time, locks are added when a user is attempting to read from the cache, move a key in the cache, and delete from the cache. 
 
 Locks are not used when a user is reading from the Redis instance since this proxy only supports the GET function and therefore the keys in the Redis instance will remain the same. If I had more time, I would optimize the concurrency so that multiple clients could concurrently connect to the proxy. This would be done with multithreading to mimic sharing of the process resources.
 
 # Running the Proxy 
 	
-To run the proxy, clone this project's repo and enter into the top-level project directory on your local computer. To start the service, run *make test* on the terminal. This will first build the three Docker images and then run the tests in the specified in test container. If all of the tests pass, it will return a message saying all tests have passed. At this point, you will be able to connect to the web server at the address and port specified at Configuration.
+To run the proxy, clone this project's repo and enter into the top-level project directory on your local computer. To start the service, run *make test* on the CLI. This will build the three Docker images and then run the tests located in the testing container. If all of the tests pass, it will return a message with a link to the web proxy. At this point, you will be able to connect to the web server at the address and port specified..
 
-To use the proxy, type in any key in the URL and the proxy will return the value if found. The Redis instance has been pre-populated with the key/values: 
+To use the proxy, type in a forward slash into the URL followed by any key and the proxy will return the value if found. The Redis instance has been pre-populated with several key/values to simplify proxy use.
 {
 "name": "lilly",
 "color": "blue",
@@ -68,11 +68,11 @@ To use the proxy, type in any key in the URL and the proxy will return the value
 ## System Tests
 The system tests run at container startup. They are held in a separate container called "testing". The first test verifies that the Redis instance is valid by setting a value and getting it with the Redis get() and set() methods. The next tests verify that the cache and connection between the Proxy and Redis server are working by populating the Redis db and subsequently searching for keys in the cache. 
 
-Although I wrote several tests, there are many more tests I would have implemented if I had more time such as testing concurrency, a single backing Redis instance, and other small unit tests. 
+Although I wrote several tests, there are more tests I would have implemented if I had more time including testing concurrency, verifying the single backing Redis instance, and other small unit tests. 
 
 ## Configuration Values
 
-The following config values are defined in an .env file and in the docker-compose. file:
+The following config values are defined in an .env file and in the docker-compose file:
 - REDIS_ADDRESS: (default = localhost)
 - REDIS_PORT: (default = 6379)
 - PROXY_PORT: (default = 5000)

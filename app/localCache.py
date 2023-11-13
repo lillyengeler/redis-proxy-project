@@ -81,6 +81,15 @@ class localCache(object):
 
         return newMRU.value
 
+    # checks if key is past the set time limit
+    def hasExpired(self,key):
+        currNode = self.listMap[key]
+        currTime = time.time()
+
+        if (currTime - currNode.timeCreated) >= self.timeLimit:
+            return True
+        return False
+
     # deletes the node that has expired based on the global expiry
     def delExpiredNode(self, key):
         # take node out of list

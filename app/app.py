@@ -2,98 +2,87 @@
 # web service using Flask 
 from flask import Flask
 import redis
+import os
+from dotenv import load_dotenv, dotenv_values
 import time
+import threading
 from localCache import * 
 
 app = Flask(__name__)
-redisClient = redis.Redis(host='redis-service', port=6379, db=0) # redis connected through docker-compose
+redisClient = redis.Redis(host=os.getenv("REDIS_ADDRESS"), port=os.getenv("REDIS_PORT"), db=0) # redis connected through docker-compose
 
-redisClient.set('name','lillian')
-redisClient.set('you','rock')
-redisClient.set('color', 'pink')
 
-# set capacity -> CHANGE LATER
-capacity = 3
 
-# set TTL (in seconds) -> CHANGE LATER 
-maxTimeAllowed = 60
+capacity = int(os.getenv("CACHE_CAPACITY", 3)) # access capacity: default = 3
+maxTimeAllowed = float(os.getenv("CACHE_EXPIRY_TIME", 60)) # access cache expiry time (in seconds): default = 60
 
 cache = localCache(capacity,maxTimeAllowed) # initialize empty dictionary and doubly linked list object
+lock = threading.Lock() # initialize lock to protect cache during reads/writes
 
-
+# home page
 @app.route('/')
 def home():
-    # return "at home page"  
-    return "home page"
+    return " To request a value from Redis, type 'get=' followed by the key"
 
-
+# print cache as a list for testing purposes
 @app.route('/printCache')
 def printCache():
-    # return "at home page"  
-    print("PRINTING CACHE: ", flush=True)
     cache.printCache()
-    return "printing local cache to console"
+    return " ~ Printing local cache to console ~"
 
-
-@app.route("/key=<key>") 
-def search_key(key):
-    # check local cache for key:
-    inCache = cache.searchCache(key)
+# main function - get the requested key/value
+@app.route("/get=<key>") 
+def search_key(key):   
+    with lock:
+        # check local cache for key:
+        inCache = cache.searchCache(key)
     # -> if in cache: 
     if inCache:
         # check if key has expired
-        currNode = cache.listMap[key]
-        currTime = time.time()
-        print("curr key's time in cache: ", flush=True)
-        print((currTime - currNode.timeCreated), flush=True)
-        print("currTime: ", currTime, flush=True)
-        # delete key from local cache if expired
-        if (currTime - currNode.timeCreated) >= cache.timeLimit:
-            print("key has expired", flush=True)
-            print("currTime: ", currTime, flush=True)
-            print("time node was created: ", currNode.timeCreated, flush=True)
-            print("currTime - timeCreated = ", (currTime - currNode.timeCreated), flush=True)
-
-            cache.delExpiredNode(key)
+        if cache.hasExpired(key):            
+            with lock:
+                # delete key from local cache 
+                cache.delExpiredNode(key)
             # check Redis for key. Return None if not found
             keyValue = (redisClient.get(key))
             if keyValue == None:
-                print("key not found in local cache or redis", flush=True)
-                return "no key found"
+                return "~ Key not found in Redis ~"
             # add back to head of cache and return
             else:
-                print("key found in redis, adding to cache", flush=True)
-                # check cache size: delete LRU if full
-                if len(cache.listMap) >= cache.capacity:
-                    # delete LRU from TAIL of cache AND the listMap
-                    cache.deleteLRU()
-                cache.addNewToHead(key, keyValue)
-                return keyValue
+                with lock:
+                    # check cache size: delete LRU if full
+                    if len(cache.listMap) >= cache.capacity:
+                        # delete LRU from TAIL of cache AND the listMap
+                        cache.deleteLRU()
+                    cache.addNewToHead(key, keyValue)
+                    return "Value: " + str(keyValue.decode("utf-8"))
 
-        # move key to head of list and return value
-        return cache.updateNode(key)
+        # if not expired: move key to head of list and return value
+        else:
+            with lock:
+                keyValue = cache.updateNode(key)
+                return "Value: " + str(keyValue.decode("utf-8"))
 
     # -> not in cache: 
     else:
         # check Redis for key. Return None if not found
         keyValue = (redisClient.get(key))
         if keyValue == None:
-            print("key not found in local cache or redis", flush=True)
-            return "no key found"
+            return "~ Key not found in Redis ~"
         
         else:
-            print("key found in redis, adding to cache", flush=True)
-            # check cache size: delete LRU if full
-            if len(cache.listMap) >= cache.capacity:
-                # delete LRU from TAIL of cache AND the listMap
-                cache.deleteLRU()
+            with lock:
+                # check cache size: delete LRU if full
+                if len(cache.listMap) >= cache.capacity:
+                    # delete LRU from TAIL of cache AND the listMap
+                    cache.deleteLRU()
 
-            # now can add the key to the HEAD of the cache
-            cache.addNewToHead(key, keyValue)
+                # now can add the key to the HEAD of the cache
+                cache.addNewToHead(key, keyValue)
 
-            return keyValue
+                return "Value: " + str(keyValue.decode("utf-8"))
 
 if (__name__ == "__main__"):
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host=os.getenv('PROXY_ADDRESS','0.0.0.0'), port=os.getenv('PROXY_PORT',5000), debug=True)
 
 

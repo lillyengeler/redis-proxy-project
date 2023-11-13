@@ -21,19 +21,6 @@ class InitTestStruct:
         """
         self.redisInstance.flushall()
 
-    def clear_cache(self):
-        """
-        Clear cache of the proxy instance
-        """
-        requests.get(url=self.proxy_url+'/clear_cache')
-
-    def clear_all(self):
-        """
-        Clear Redis and proxy data
-        """
-        self.clear_redis()
-        self.clear_cache()
-
     def populate_redis(self, d):
         """
         Populate Redis backing instance from the given dictionary
@@ -55,12 +42,9 @@ class InitTestStruct:
         """
         return self.redisInstance.get(key)
 
-
     def make_get_request(self, key):
         """
         Make an HTTP GET request to the proxy instance
-        Parameters:
-            key str: the string to search for the value
         """
         newURL = self.proxy_url + key
         res = requests.get(url=newURL)

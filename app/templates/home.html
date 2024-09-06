@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Redis Proxy</title>
+</head>
+<body>
+    <div id="main">
+        <div id="header">
+            <h3>
+                To request a value from Redis, type the requested key into the search bar below
+            </h3>
+        </div>
+        <div id="second">
+            <h4>
+                The preloaded keys are: "name", "color", "a", "one", and "five"
+            </h4>
+        </div>
+        <div id="search">
+            <form id="keyForm">
+                <input type="text" id="key" placeholder="Key">
+                <button type = "submit"> Get Value </button>
+            </form>
+        </div>
+        <div id="displayValue">
+
+        </div>
+
+        <div id="form2">
+            <h3>
+                To display the current status of the cache, press the button below
+            </h3>
+        </div>
+        <div id="cacheStatus">
+            <button id = "cacheButton"> Display Cache </button>
+        </div>
+        <div id="displayCache">
+
+        </div>
+
+        <script src="{{ url_for('static', filename='js/request.js') }}"></script>
+    </div>   
+</body>
+</html>

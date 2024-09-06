@@ -1,0 +1,46 @@
+# to spin up app and redis containers simultaneously
+version: '3'
+services:
+  webapp-service:
+    build: ./app
+    volumes:
+      - ./app:/usr/src/app/
+    ports:
+      - 5000:5000
+    environment:
+      - PROXY_PORT=5000
+      - REDIS_PORT=6379
+      - REDIS_ADDRESS=redis-service
+      - CACHE_EXPIRY_TIME=60  # in seconds
+      - CACHE_CAPACITY=3 
+    depends_on: # doesn't start until the redis instance starts
+      - redis-service
+    
+
+  redis-service:
+    image: redis:latest # using already defined redis image on docker hub
+    restart: always
+    volumes:
+      - ./redis_instance:/usr/src/redis_instance/
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_ADDRESS=redis-service
+      - PROXY_PORT=5000
+      - PROXY_ADDRESS=webapp-service
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  testing:
+    build: ./tests
+    environment:
+      - PROXY_PORT=5000
+      - PROXY_ADDRESS=webapp-service
+      - REDIS_PORT=6379
+      - REDIS_ADDRESS=redis-service
+      - CACHE_EXPIRY_TIME=60  # in seconds
+      - CACHE_CAPACITY=3 
+    depends_on:
+      - redis-service
+      - webapp-service
+

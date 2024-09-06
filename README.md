@@ -83,9 +83,6 @@ The following config values are defined in an .env file and in the docker-compos
 - CACHE_CAPACITY: max number of keys allowed in the cache at any given time (default = 3)
 
 
-## Missing Requirements
-Due to time constraints, I was not able to implement the parallel concurrent processing, concurrent client limit, and Redis client protocol bonus requirements. 
-
 ## Time Taken to Complete Project
 
  - building the Flask web service – (0.5 hour)

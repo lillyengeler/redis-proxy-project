@@ -13,7 +13,7 @@ graph LR;
 ```
 
 # System Requirements
-To run this proxy, make sure you have have installed Docker, docker-compose, and GNU Make. 
+To run this proxy, make sure you have have installed Docker, docker-compose, GNU Make, and bash. 
 
 # Code Explanation
 On startup, a docker-compose file builds and runs three separate containers: a single Redis instance, a web proxy consisting of the basic web service and the LRU cache, and a container for testing the Proxy.
